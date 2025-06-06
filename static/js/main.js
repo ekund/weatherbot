@@ -5,10 +5,48 @@ document.addEventListener('DOMContentLoaded', async function() {
         const response = await fetch('/api/location');
         userLocation = await response.json();
         // Update location display
-        document.querySelector('.location-display p').textContent = userLocation.city;
+        updateLocationDisplay(userLocation);
     } catch (error) {
         console.error('Error fetching location:', error);
         document.querySelector('.location-display p').textContent = 'Location not available';
+    }
+
+    // Handle location update
+    document.getElementById('update-location').addEventListener('click', async function() {
+        const zipcode = document.getElementById('zipcode').value;
+        if (!zipcode || !/^\d{5}$/.test(zipcode)) {
+            alert('Please enter a valid 5-digit ZIP code');
+            return;
+        }
+
+        try {
+            const response = await fetch('/api/location/zipcode', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ zipcode })
+            });
+
+            const data = await response.json();
+            if (!response.ok) {
+                throw new Error(data.error || 'Failed to update location');
+            }
+
+            userLocation = data;
+            updateLocationDisplay(userLocation);
+            document.getElementById('zipcode').value = ''; // Clear input
+        } catch (error) {
+            console.error('Error:', error);
+            alert(error.message || 'Failed to update location. Please try again.');
+        }
+    });
+
+    // Function to update location display
+    function updateLocationDisplay(location) {
+        if (location && location.city) {
+            document.querySelector('.location-display p').textContent = `📍 ${location.city}`;
+        }
     }
 
     // Initialize date picker
@@ -100,6 +138,13 @@ document.addEventListener('DOMContentLoaded', async function() {
         } catch (error) {
             console.error('Error:', error);
             alert(error.message || 'Failed to get weather prediction. Please try again.');
+        }
+    });
+
+    // Add enter key support for zipcode input
+    document.getElementById('zipcode').addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            document.getElementById('update-location').click();
         }
     });
 }); 

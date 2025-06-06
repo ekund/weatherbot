@@ -172,6 +172,28 @@ def predict_weather(lat, lon, target_date):
     
     return pred_temp, pred_condition
 
+def get_location_from_zipcode(zipcode):
+    """Get location information from zipcode using Nominatim"""
+    try:
+        geolocator = Nominatim(user_agent="weatherbot")
+        location = geolocator.geocode(f"{zipcode}, USA")
+        
+        if location:
+            # Try to extract city name from address
+            address_parts = location.address.split(", ")
+            city = next((part for part in address_parts if "City" in part or any(char.isdigit() for char in part) == False), "Unknown City")
+            city = city.replace(" City", "")
+            
+            return {
+                'city': city,
+                'latitude': location.latitude,
+                'longitude': location.longitude
+            }
+        return None
+    except Exception as e:
+        print(f"Error in get_location_from_zipcode: {str(e)}")
+        return None
+
 @app.route('/')
 def index():
     return render_template('index.html')
@@ -226,6 +248,25 @@ def get_weather():
         })
     except Exception as e:
         print(f"Error in get_weather: {str(e)}")
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/location/zipcode', methods=['POST'])
+def update_location():
+    try:
+        data = request.json
+        zipcode = data.get('zipcode')
+        
+        if not zipcode:
+            return jsonify({'error': 'Zipcode is required'}), 400
+            
+        location = get_location_from_zipcode(zipcode)
+        if location:
+            return jsonify(location)
+        else:
+            return jsonify({'error': 'Could not find location for this zipcode'}), 400
+            
+    except Exception as e:
+        print(f"Error in update_location: {str(e)}")
         return jsonify({'error': str(e)}), 500
 
 if __name__ == '__main__':

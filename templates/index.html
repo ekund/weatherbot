@@ -13,13 +13,18 @@
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Location</label>
-                        <div class="location-display alert alert-info">
+                        <div class="location-display alert alert-info mb-2">
                             {% if location %}
                             <p class="mb-0">📍 {{ location.city }}</p>
                             {% else %}
                             <p class="mb-0">Location not detected</p>
                             {% endif %}
                         </div>
+                        <div class="input-group">
+                            <input type="text" class="form-control" id="zipcode" placeholder="Enter ZIP code to update location" pattern="[0-9]{5}" maxlength="5">
+                            <button class="btn btn-outline-secondary" type="button" id="update-location">Update Location</button>
+                        </div>
+                        <div class="form-text">Enter a US ZIP code to change the location</div>
                     </div>
                     <div class="d-flex justify-content-between align-items-center mb-3">
                         <div class="btn-group" role="group" aria-label="Temperature unit toggle">
