@@ -10,8 +10,10 @@ body {
 }
 
 .navbar-logo {
-    height: 32px;
-    width: auto;
+    height: 48px;
+    width: 48px;
+    max-width: 48px;
+    max-height: 48px;
     object-fit: contain;
     display: inline-block;
     vertical-align: middle;
@@ -23,6 +25,10 @@ body {
     display: flex;
     align-items: center;
     gap: 0.5rem;
+}
+
+.navbar-brand img {
+    flex-shrink: 0;
 }
 
 .card {

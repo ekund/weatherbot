@@ -55,16 +55,36 @@ This application is configured for easy deployment on Render.com's free tier:
      - Build Command: `pip install -r requirements.txt`
      - Start Command: `gunicorn app:app`
 
-4. Click "Create Web Service"
+4. Set up environment variables in Render Dashboard:
+   - Go to your web service dashboard
+   - Click on "Environment"
+   - Add the following secret variables:
+     - `SECRET_KEY`: Click "Generate" for a secure random value
+     - `DATABASE_URL`: `sqlite:///weather.db`
+
+5. Click "Create Web Service"
 
 Your application will be deployed and available at `https://your-service-name.onrender.com`
 
 ## Environment Variables
 
-The following environment variables are automatically configured in render.yaml:
+The application uses two types of environment variables:
+
+### Non-sensitive variables (configured in render.yaml):
 - `PORT`: 5001
-- `SECRET_KEY`: Automatically generated
-- `DATABASE_URL`: SQLite database path
+- `PYTHON_VERSION`: 3.11.0
+
+### Sensitive variables (set in Render Dashboard):
+- `SECRET_KEY`: Used for Flask session security
+- `DATABASE_URL`: Database connection string
+
+To modify environment variables:
+1. For non-sensitive variables: Edit `render.yaml`
+2. For sensitive variables: Use the Render Dashboard
+   - Go to your service in Render
+   - Click "Environment"
+   - Add or modify variables as needed
+   - Click "Save Changes" to apply
 
 ## Technologies Used
 

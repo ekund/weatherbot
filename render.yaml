@@ -9,7 +9,9 @@ services:
         value: 3.11.0
       - key: PORT
         value: 5001
-      - key: SECRET_KEY
-        generateValue: true
+    # Secrets should be set in the Render Dashboard
+    envVarsGroups:
+      - name: weatherbot-secrets
+        branch: main
       - key: DATABASE_URL
         value: sqlite:///weather.db 

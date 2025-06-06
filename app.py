@@ -1,5 +1,4 @@
 from flask import Flask, render_template, request, jsonify
-from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime, timedelta
 import os
 from dotenv import load_dotenv
@@ -14,18 +13,6 @@ load_dotenv()
 
 app = Flask(__name__)
 CORS(app)
-app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'dev-key-please-change')
-app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL', 'sqlite:///weather.db')
-
-db = SQLAlchemy(app)
-
-class WeatherPrediction(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    date = db.Column(db.DateTime, nullable=False)
-    location = db.Column(db.String(100), nullable=False)
-    temperature = db.Column(db.Float, nullable=False)
-    conditions = db.Column(db.String(50), nullable=False)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
 def get_location_from_ip():
     """Get location information with better error handling"""
@@ -187,8 +174,12 @@ def predict_weather(lat, lon, target_date):
 
 @app.route('/')
 def index():
+    return render_template('index.html')
+
+@app.route('/api/location', methods=['GET'])
+def get_location():
     location = get_location_from_ip()
-    return render_template('index.html', location=location)
+    return jsonify(location)
 
 @app.route('/api/weather', methods=['POST'])
 def get_weather():
@@ -212,8 +203,9 @@ def get_weather():
             print(f"Date parsing error: {str(e)}")
             return jsonify({'error': 'Invalid date format. Please use YYYY-MM-DD or Month DD, YYYY format'}), 400
         
-        location = get_location_from_ip()
-        print(f"Location data: {location}")  # Debug log
+        # Get location from request data
+        location = data.get('location', get_location_from_ip())
+        print(f"Location data: {location}")
         
         if not location or not location.get('latitude') or not location.get('longitude'):
             return jsonify({'error': 'Could not detect location'}), 400
@@ -227,16 +219,6 @@ def get_weather():
         if temperature is None:
             return jsonify({'error': conditions}), 400
         
-        # Save prediction to database
-        prediction = WeatherPrediction(
-            date=datetime.strptime(target_date, '%Y-%m-%d'),
-            location=location['city'],
-            temperature=temperature,
-            conditions=conditions
-        )
-        db.session.add(prediction)
-        db.session.commit()
-        
         return jsonify({
             'temperature': round(temperature, 1),
             'conditions': conditions,
@@ -247,7 +229,5 @@ def get_weather():
         return jsonify({'error': str(e)}), 500
 
 if __name__ == '__main__':
-    with app.app_context():
-        db.create_all()
     port = int(os.getenv('PORT', 5001))
     app.run(host='0.0.0.0', port=port) 

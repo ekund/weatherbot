@@ -1,4 +1,16 @@
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', async function() {
+    // Get user's location
+    let userLocation = null;
+    try {
+        const response = await fetch('/api/location');
+        userLocation = await response.json();
+        // Update location display
+        document.querySelector('.location-display p').textContent = userLocation.city;
+    } catch (error) {
+        console.error('Error fetching location:', error);
+        document.querySelector('.location-display p').textContent = 'Location not available';
+    }
+
     // Initialize date picker
     const datePicker = flatpickr("#date", {
         minDate: "today",
@@ -42,11 +54,15 @@ document.addEventListener('DOMContentLoaded', function() {
     // Handle prediction button click
     document.getElementById('predict-button').addEventListener('click', async function() {
         const date = document.getElementById('date').value;
-        const locationDisplay = document.querySelector('.location-display p').textContent;
         const selectedUnit = document.querySelector('input[name="temp-unit"]:checked').value;
         
         if (!date) {
             alert('Please select a date first!');
+            return;
+        }
+
+        if (!userLocation) {
+            alert('Location data not available. Please try again later.');
             return;
         }
 
@@ -58,11 +74,16 @@ document.addEventListener('DOMContentLoaded', function() {
                 },
                 body: JSON.stringify({
                     date: date,
-                    location: locationDisplay
+                    location: userLocation
                 })
             });
 
             const data = await response.json();
+            
+            if (!response.ok) {
+                throw new Error(data.error || 'Failed to get weather prediction');
+            }
+            
             currentTemperature = data.temperature;
             
             // Update the weather result display
@@ -78,7 +99,7 @@ document.addEventListener('DOMContentLoaded', function() {
             resultDiv.scrollIntoView({ behavior: 'smooth' });
         } catch (error) {
             console.error('Error:', error);
-            alert('Failed to get weather prediction. Please try again.');
+            alert(error.message || 'Failed to get weather prediction. Please try again.');
         }
     });
 }); 
